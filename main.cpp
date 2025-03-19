@@ -4,6 +4,7 @@
 #include<fstream>
 #include<unistd.h>
 #include<vector>
+#include<sys/ioctl.h>
 using namespace std;
 
 
@@ -20,58 +21,79 @@ void showText_and_movement(ifstream &file)
 
     //////////////////////////////// Variable
     int x,y = 0;    // save cursor position
-    int key;
+    int key = 0;
     int lineNumber=0;
     vector<int> linesize; //save all lines size
     string buffer;  //temp
-    string final = "";
+    string final;
     ////////////////////////////////
-    int pad_index = 0;
-    while (getline(file, buffer)) // get Text(line by line)
-    {
 
-        linesize.push_back(1);  // add site vector
+    
+    /////////////////////////////////////   print text
+    WINDOW* pad = newpad(1000, 10);
+    
+    while (getline(file, buffer))
+    {
+        linesize.push_back(1);
         linesize[lineNumber] = buffer.length(); // save line size to vector
-        final += buffer;    // add tmp tp final text
-        final += "\n";
-        lineNumber++;
-
-        // mvwprintw(pad, lineNumber, 0, "%s", buffer.c_str());
+        mvwprintw(pad, lineNumber, 0, buffer.c_str());
+        lineNumber++;   
     }
-    
-    
+    /////////////////////////////
 
-    
+    int pad_index = 0;
+    int max_y;
+    int max_x;
     while (true)
-    {
+    {        
+        /////////////////////// update scr size
+        struct winsize scr;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
+        max_y = scr.ws_row-1;
+        max_x = scr.ws_col;
+        ///////////////////////
+
+        refresh();
+        prefresh(pad, pad_index, 0, 0, 0, max_y, 80);
+        key = getch();
         clear();
 
-        printw("%s", final.c_str());
-        
-        /////////////////////// generate Cursor Position
+
+        //////////////////////// generate Cursor Position
         if(key == 258) // down
         {
-            if(y < lineNumber-1)
+            if(y >= max_y)
+            {
+                pad_index++;
+
+                /*
+                    if cursor out screen > set cursor to max screen
+                    
+                    (fix) change size Screen > Cursor out screen
+                */
+                if(y != max_y) y = max_y;
+            }
+            else if(y < lineNumber-1)    //debug
             {
                 y++;
-                pad_index++;
-            }
-            if(linesize[y] < x) //if cursor position(x) is not avilable on y line
-            {
-                x = linesize[y];    //update x position to max
+                if(linesize[y] < x) //if cursor position(x) is not avilable on y line
+                {
+                    x = linesize[y];    //update x position to max
+                }
             }
         }
         else if(key == 259) //up
         {
-            if(y > 0)
+            if(0 >= y)   //max y display
+            {
+                pad_index--;
+            }
+            else if(y > 0)
             {
                 y--;
+                if(linesize[y] < x) x = linesize[y];//if cursor position(x) is not avilable on y line    
             }
-
-            if(linesize[y] < x) //if cursor position(x) is not avilable on y line
-            {
-                x = linesize[y];    //update x position to max
-            }
+            
         }
         else if(key == 260) //left
         {
@@ -89,10 +111,7 @@ void showText_and_movement(ifstream &file)
         }
         ////////////////////////
         
-        
         mvprintw(y, x, "");    //print Cursor
-        key=getch();
-        refresh();
     }
 
     endwin();
@@ -100,6 +119,15 @@ void showText_and_movement(ifstream &file)
 
 int main(int number, char* args[])
 {
+
+
+    // struct winsize scr;  //debug
+    // ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
+    // int max_y = scr.ws_row;
+    // int max_x = scr.ws_col;
+    // cout << "E: " << max_y << endl;
+    // sleep(5);
+
     // printf("you say: %s", args[1]); debug
     ifstream file = ifstream(args[1]);
 
@@ -111,6 +139,5 @@ int main(int number, char* args[])
 
     showText_and_movement(file);
 
-    
     return 0;
 }
