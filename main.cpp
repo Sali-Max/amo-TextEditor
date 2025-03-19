@@ -5,14 +5,14 @@
 #include<unistd.h>
 #include<vector>
 #include<sys/ioctl.h>
+
 using namespace std;
 
 
 
 
 
-
-void showText_and_movement(ifstream &file)
+void showText_and_movement(ifstream &file,int screen_x, int &screen_y)
 {
     initscr();
     noecho();
@@ -20,52 +20,53 @@ void showText_and_movement(ifstream &file)
     
 
     //////////////////////////////// Variable
-    int x,y = 0;    // save cursor position
+    int x,y = 0;    // cursor position
     int key = 0;
-    int lineNumber=0;
-    vector<int> linesize; //save all lines size
-    string buffer;  //temp
-    string final;
+    vector<int> linesize; // all lines size
+    vector<string> lines;   //all line text
+    string buffer;  //temp line
     ////////////////////////////////
 
-    
-    /////////////////////////////////////   print text
-    WINDOW* pad = newpad(1000, 10);
-    
-    while (getline(file, buffer))
+    /////////////////////////////////////// Read File And Print
+    while (getline(file, buffer)) //read file
     {
-        linesize.push_back(1);
-        linesize[lineNumber] = buffer.length(); // save line size to vector
-        mvwprintw(pad, lineNumber, 0, buffer.c_str());
-        lineNumber++;   
+        lines.push_back(buffer);
+        linesize.push_back(buffer.length());
     }
-    /////////////////////////////
+
+    int all_line_number = lines.size();
+    WINDOW* pad = newpad (all_line_number, 10); //dynamic pad size
+    for(size_t i=0; i<all_line_number; i++) //print all text(line by line)
+    {
+        mvwprintw(pad, i, 0, "%s", lines[i].c_str());
+    }
+    ///////////////////////////////////////
 
     int pad_index = 0;
     int max_y;
     int max_x;
     while (true)
     {        
-        /////////////////////// update scr size
+        /////////////////////// Update Scr size (for Dynamic Screen Size)
         struct winsize scr;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
         max_y = scr.ws_row-1;
         max_x = scr.ws_col;
         ///////////////////////
 
-        refresh();
-        prefresh(pad, pad_index, 0, 0, 0, max_y, 80);
+
+        refresh();  //refresh Cursor
+        prefresh(pad, pad_index, 0, 0, 0, max_y, 80); //refresh text file
         key = getch();
         clear();
 
 
-        //////////////////////// generate Cursor Position
+        //////////////////////// Generate Cursor Position
         if(key == 258) // down
         {
-            if(y >= max_y)
+            if(y >= max_y)  //if cursor is end
             {
                 pad_index++;
-
                 /*
                     if cursor out screen > set cursor to max screen
                     
@@ -73,14 +74,15 @@ void showText_and_movement(ifstream &file)
                 */
                 if(y != max_y) y = max_y;
             }
-            else if(y < lineNumber-1)    //debug
+            else  // Cursor movement
             {
                 y++;
-                if(linesize[y] < x) //if cursor position(x) is not avilable on y line
+                if(linesize[y] < x) //if cursor position(x) is not avilable on y line   //debug
                 {
                     x = linesize[y];    //update x position to max
                 }
             }
+
         }
         else if(key == 259) //up
         {
@@ -120,13 +122,12 @@ void showText_and_movement(ifstream &file)
 int main(int number, char* args[])
 {
 
-
-    // struct winsize scr;  //debug
-    // ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
-    // int max_y = scr.ws_row;
-    // int max_x = scr.ws_col;
-    // cout << "E: " << max_y << endl;
-    // sleep(5);
+    // 
+    struct winsize scr;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
+    int screen_y = scr.ws_row-1;
+    int screen_x = scr.ws_col;
+    //
 
     // printf("you say: %s", args[1]); debug
     ifstream file = ifstream(args[1]);
@@ -137,7 +138,7 @@ int main(int number, char* args[])
         return 0;
     }
 
-    showText_and_movement(file);
+    showText_and_movement(file ,screen_x ,screen_y);
 
     return 0;
 }
