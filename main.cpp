@@ -5,131 +5,107 @@
 #include<unistd.h>
 #include<vector>
 #include<sys/ioctl.h>
-
 using namespace std;
 
 
 
-
-
-void showText_and_movement(ifstream &file,int screen_x, int &screen_y)
+void showText_and_movement(ifstream &file)
 {
     initscr();
     noecho();
     keypad(stdscr, true);
-    
+    // curs_set(0);
 
-    //////////////////////////////// Variable
-    int x,y = 0;    // cursor position
-    int key = 0;
-    vector<int> linesize; // all lines size
-    vector<string> lines;   //all line text
-    string buffer;  //temp line
-    ////////////////////////////////
+    //Variable
+    vector<string> lines;
+    vector<int> lineNumber;
+    //
 
-    /////////////////////////////////////// Read File And Print
-    while (getline(file, buffer)) //read file
+    WINDOW* pad = newpad(1000, 10);
+    string buffer; //temp variable
+    int linenumber = 0;
+    while(getline(file, buffer))
     {
         lines.push_back(buffer);
-        linesize.push_back(buffer.length());
-    }
+        lineNumber.push_back(buffer.length());
 
-    int all_line_number = lines.size();
-    WINDOW* pad = newpad (all_line_number, 10); //dynamic pad size
-    for(size_t i=0; i<all_line_number; i++) //print all text(line by line)
-    {
-        mvwprintw(pad, i, 0, "%s", lines[i].c_str());
+        mvwprintw(pad, linenumber, 0, "%s", buffer.c_str());
+        linenumber++;
     }
-    ///////////////////////////////////////
-
-    int pad_index = 0;
-    int max_y;
-    int max_x;
+    
+    refresh();  //refresh Screen
+    
+    int key = 0;
+    int cursor_y, cursor_x,pad_index = 0;
+    long int what_is_number_line = 0;
     while (true)
-    {        
+    {   
         /////////////////////// Update Scr size (for Dynamic Screen Size)
         struct winsize scr;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
-        max_y = scr.ws_row-1;
-        max_x = scr.ws_col;
+        int max_y = scr.ws_row-1;
+        int max_x = scr.ws_col;
         ///////////////////////
-
-
-        refresh();  //refresh Cursor
-        prefresh(pad, pad_index, 0, 0, 0, max_y, 80); //refresh text file
-        key = getch();
-        clear();
-
-
-        //////////////////////// Generate Cursor Position
-        if(key == 258) // down
+        
+        if(key == KEY_DOWN)
         {
-            if(y >= max_y)  //if cursor is end
+            if(cursor_y == max_y) 
             {
-                pad_index++;
-                /*
-                    if cursor out screen > set cursor to max screen
-                    
-                    (fix) change size Screen > Cursor out screen
-                */
-                if(y != max_y) y = max_y;
+                pad_index++; 
+                what_is_number_line++;
             }
-            else  // Cursor movement
+            else
             {
-                y++;
-                if(linesize[y] < x) //if cursor position(x) is not avilable on y line   //debug
+                cursor_y++;
+                what_is_number_line++;
+            }
+        }
+        else if(key == KEY_UP)
+        {
+            if(cursor_y > 0)
+            {
+                cursor_y--;
+                what_is_number_line--;
+            } 
+            else 
+            {
+                if(pad_index > 0)   // only positive pad_index
                 {
-                    x = linesize[y];    //update x position to max
+                    pad_index--;
+                    what_is_number_line--;
                 }
             }
-
         }
-        else if(key == 259) //up
+        else if(key == KEY_LEFT)
         {
-            if(0 >= y)   //max y display
+            if(cursor_x > 0)
             {
-                pad_index--;
+                cursor_x--;
             }
-            else if(y > 0)
-            {
-                y--;
-                if(linesize[y] < x) x = linesize[y];//if cursor position(x) is not avilable on y line    
-            }
-            
         }
-        else if(key == 260) //left
+        else if(key == KEY_RIGHT)
         {
-            if(x>0)
+            if(lineNumber[what_is_number_line] > cursor_x)
             {
-                x--;
+                cursor_x++;
             }
         }
-        else if(key == 261) //right
-        {
-            if(linesize[y] > x)
-            {
-                x++;
-            }
-        }
-        ////////////////////////
-        
-        mvprintw(y, x, "");    //print Cursor
+        mvprintw(cursor_y, cursor_x, "");
+        prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
+        key = getch();
     }
+    
+    
 
+    
+    
     endwin();
+
+
 }
 
 int main(int number, char* args[])
 {
-
-    // 
-    struct winsize scr;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
-    int screen_y = scr.ws_row-1;
-    int screen_x = scr.ws_col;
-    //
-
-    // printf("you say: %s", args[1]); debug
     ifstream file = ifstream(args[1]);
 
     if(!file.is_open())
@@ -137,8 +113,6 @@ int main(int number, char* args[])
         printf("aim: cannot open %s: No such file or directory", args[1]);
         return 0;
     }
-
-    showText_and_movement(file ,screen_x ,screen_y);
-
+    showText_and_movement(file);
     return 0;
 }
