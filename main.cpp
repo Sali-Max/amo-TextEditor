@@ -49,15 +49,18 @@ void showText_and_movement(ifstream &file)
         
         if(key == KEY_DOWN)
         {
-            if(cursor_y == max_y) 
+            if(what_is_number_line < lines.size())
             {
-                pad_index++; 
-                what_is_number_line++;
-            }
-            else
-            {
-                cursor_y++;
-                what_is_number_line++;
+                if(cursor_y == max_y) 
+                {
+                    pad_index++; 
+                    what_is_number_line++;
+                }
+                else
+                {
+                    cursor_y++;
+                    what_is_number_line++;
+                }
             }
         }
         else if(key == KEY_UP)
