@@ -21,7 +21,7 @@ void showText_and_movement(ifstream &file)
     vector<int> lineNumber;
     //
 
-    WINDOW* pad = newpad(1000, 10);
+    WINDOW* pad = newpad(1000, 30);
     string buffer; //temp variable
     int linenumber = 0;
     while(getline(file, buffer))
@@ -50,17 +50,26 @@ void showText_and_movement(ifstream &file)
         /////////////////////////////   Input Handler
         if(key == KEY_DOWN)
         {
-            if(what_is_number_line < lines.size())  //set maximum down
+            if(what_is_number_line < lines.size()-1)  //set maximum down
             {
                 if(cursor_y == max_y) 
                 {
                     pad_index++; 
                     what_is_number_line++;
+                    if(lineNumber[what_is_number_line] < cursor_x)  // recheck cursor_x, (limit)
+                    {
+                        cursor_x = lineNumber[what_is_number_line];
+                    }
                 }
                 else
                 {
                     cursor_y++;
                     what_is_number_line++;
+
+                    if(lineNumber[what_is_number_line] < cursor_x)  // recheck cursor_x, (limit)
+                    {
+                        cursor_x = lineNumber[what_is_number_line];
+                    }
                 }
             }
         }
@@ -70,6 +79,10 @@ void showText_and_movement(ifstream &file)
             {
                 cursor_y--;
                 what_is_number_line--;
+                if(lineNumber[what_is_number_line] < cursor_x)  // switch line, recheck cursor_x
+                {
+                    cursor_x = lineNumber[what_is_number_line];
+                }
             } 
             else 
             {
@@ -77,6 +90,11 @@ void showText_and_movement(ifstream &file)
                 {
                     pad_index--;
                     what_is_number_line--;
+                }
+                
+                if(lineNumber[what_is_number_line] < cursor_x)  // switch line, recheck cursor_x
+                {
+                    cursor_x = lineNumber[what_is_number_line];
                 }
             }
         }
@@ -90,13 +108,7 @@ void showText_and_movement(ifstream &file)
         else if(key == KEY_RIGHT)
         {
             if(lineNumber[what_is_number_line] > cursor_x)
-            {
-                // // if line is not avilable in lines
-                // if(what_is_number_line > lines.size())  // fix endline cursor_x unlimit
-                // {
-
-                // }
-                // else cursor_x++;
+            {      
                 cursor_x++;
             }
         }
@@ -125,15 +137,10 @@ void showText_and_movement(ifstream &file)
         }
         //////////////////////////////
 
-
         mvprintw(cursor_y, cursor_x, "");
         prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
         key = getch();
-    }
-    
-    
-
-    
+    }    
     
     endwin();
 
