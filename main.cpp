@@ -18,12 +18,32 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
 
 void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, WINDOW* pad)
 {
-    if(key >= 32 && key <= 126) // Printable key
+    if(key >= 32 && key <= 126) // Print Printable key
     {
-        lines[what_is_number_line].insert(cursor_x, 1, key);
-        refresh_line(pad, what_is_number_line, lines);
+        lines[what_is_number_line].insert(cursor_x, 1, key);    // insert key to line
+        refresh_line(pad, what_is_number_line, lines);  // update screen
+
         lineNumber[what_is_number_line] = lines[what_is_number_line].length(); // Update line size
         cursor_x++;
+    }
+    else if(key == KEY_BACKSPACE)    //Delete char
+    {
+        if(cursor_x > 0)
+        {
+            lines[what_is_number_line].erase(cursor_x-1, 1);
+            refresh_line(pad, what_is_number_line, lines);  // update screen
+            lineNumber[what_is_number_line] = lines[what_is_number_line].length(); // Update line size
+            cursor_x--;
+        }
+    }
+    else if(key == KEY_DC)  //delete key
+    {
+        if(cursor_x+1 < lineNumber[what_is_number_line])
+        {
+            lines[what_is_number_line].erase(cursor_x+1, 1);    // delete char
+            refresh_line(pad, what_is_number_line, lines);  //refresh screen
+            lineNumber[what_is_number_line] = lines[what_is_number_line].length(); //update lineNumber
+        }
     }
 }
 
