@@ -9,6 +9,25 @@ using namespace std;
 
 
 
+
+bool save(const vector<string> &lines, const string &filename)
+{
+    ofstream file(filename);
+    if(!file.is_open()) //check 
+    {
+        return false;
+    }
+
+    int allLineNumber = lines.size();
+    for(size_t i=0; i < allLineNumber; i++)   //print all(-1) lines and go to next line
+    {
+        file << lines[i] << endl;
+    }
+
+    file.close();
+    return true;
+}
+
 void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector<string> &lines)
 {
     wmove(pad, what_is_number_line, 0); //go to line
@@ -45,6 +64,7 @@ void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, c
             lineNumber[what_is_number_line] = lines[what_is_number_line].length(); //update lineNumber
         }
     }
+    
 }
 
 
@@ -56,7 +76,7 @@ void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &
     }
 }
 
-void showText_and_movement(ifstream &file)
+void showText_and_movement(ifstream &file, const string &filename)
 {
     initscr();
     noecho();
@@ -83,7 +103,9 @@ void showText_and_movement(ifstream &file)
     refresh();  //refresh Screen
     
     int key = 0;
-    int cursor_y, cursor_x,pad_index = 0;
+    int pad_index = 0;
+    int cursor_y = 0;
+    int cursor_x = 0;
     long int what_is_number_line = 0;
     while (true)
     {   
@@ -200,10 +222,33 @@ void showText_and_movement(ifstream &file)
             
         }
         ////////////////////////////// edit file
+        else if(key == 19) //save file
+        {
+            if(save(lines, filename))
+            {
+                { //debug
+                    endwin();
+                    cout << "Success :)" << "\n";
+                    sleep(1);
+                    // initscr();
+                }
+            }
+            else
+            {
+                { //debug
+                    endwin();
+                    cout << "ReadOnly File :(" << "\n";
+                    sleep(2);
+                    // initscr();
+                }
+            }
+        }
         else
         {
             edit(lines, what_is_number_line, cursor_x, key, lineNumber, pad);
         }
+        /////////////////////////////
+        
 
 
         mvprintw(cursor_y, cursor_x, "");
@@ -225,6 +270,6 @@ int main(int number, char* args[])
         printf("aim: cannot open %s: No such file or directory", args[1]);
         return 0;
     }
-    showText_and_movement(file);
+    showText_and_movement(file, args[1]); //send file and filename
     return 0;
 }
