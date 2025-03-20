@@ -46,10 +46,11 @@ void showText_and_movement(ifstream &file)
         int max_y = scr.ws_row-1;
         int max_x = scr.ws_col;
         ///////////////////////
-        
+
+        /////////////////////////////   Input Handler
         if(key == KEY_DOWN)
         {
-            if(what_is_number_line < lines.size())
+            if(what_is_number_line < lines.size())  //set maximum down
             {
                 if(cursor_y == max_y) 
                 {
@@ -90,9 +91,41 @@ void showText_and_movement(ifstream &file)
         {
             if(lineNumber[what_is_number_line] > cursor_x)
             {
+                // // if line is not avilable in lines
+                // if(what_is_number_line > lines.size())  // fix endline cursor_x unlimit
+                // {
+
+                // }
+                // else cursor_x++;
                 cursor_x++;
             }
         }
+        else if(key == KEY_PPAGE) // page Up    
+        {
+            if(pad_index > 10)
+            {
+                pad_index-=10;
+                what_is_number_line-=10;
+            }
+            else
+            {
+                pad_index=0;
+                cursor_y=0;
+                what_is_number_line = 0;
+            }
+
+        }
+        else if(key == KEY_NPAGE)   //page down
+        {
+            if(what_is_number_line+(max_y-cursor_y) < lines.size())   //if thisLine+10 not biger of all lines
+            {
+                pad_index+=10;
+                what_is_number_line+=10;
+            }
+        }
+        //////////////////////////////
+
+
         mvprintw(cursor_y, cursor_x, "");
         prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
         key = getch();
