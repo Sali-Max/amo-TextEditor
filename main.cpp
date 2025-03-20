@@ -9,6 +9,23 @@ using namespace std;
 
 
 
+void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector<string> &lines)
+{
+    wmove(pad, what_is_number_line, 0); //go to line
+    wclrtoeol(pad); //delete line
+    mvwprintw(pad, what_is_number_line, 0, "%s", lines[what_is_number_line].c_str()); // print new line
+}
+
+void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, WINDOW* pad)
+{
+    if(key >= 32 && key <= 126) // Printable key
+    {
+        lines[what_is_number_line].insert(cursor_x, 1, key);
+        refresh_line(pad, what_is_number_line, lines);
+        lineNumber[what_is_number_line] = lines[what_is_number_line].length(); // Update line size
+        cursor_x++;
+    }
+}
 
 
 void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &what_is_number_line)
@@ -162,7 +179,12 @@ void showText_and_movement(ifstream &file)
             }
             
         }
-        //////////////////////////////
+        ////////////////////////////// edit file
+        else
+        {
+            edit(lines, what_is_number_line, cursor_x, key, lineNumber, pad);
+        }
+
 
         mvprintw(cursor_y, cursor_x, "");
         prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
