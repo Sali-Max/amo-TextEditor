@@ -131,12 +131,36 @@ void showText_and_movement(ifstream &file)
         }
         else if(key == KEY_NPAGE)   //page down
         {
-            if(what_is_number_line+(max_y-cursor_y) < lines.size())   //if thisLine+10 not biger of all lines
+            if(what_is_number_line+(max_y+cursor_y) < lines.size())   //if thisLine+10 not biger of all lines
             {
                 pad_index+=10;
                 what_is_number_line+=10;
+                
                 switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
             }
+            else    //if end Pageup btn click
+            {
+                while (true)    // cursor_y to end screen
+                {
+                    if(cursor_y < max_y && what_is_number_line < lines.size()-1)
+                    {
+                        cursor_y++;
+                        what_is_number_line++;
+                    }
+                    else break;
+                }
+
+                while(true) //pad_index to end
+                {
+                    if(what_is_number_line < lines.size()-1)    // cursor now is end, this (if) checked pad_index is ended!?
+                    {
+                        what_is_number_line++;
+                        pad_index++;
+                    }
+                    else break;
+                }
+            }
+            
         }
         //////////////////////////////
 
