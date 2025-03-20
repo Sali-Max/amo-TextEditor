@@ -9,6 +9,16 @@ using namespace std;
 
 
 
+
+
+void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &what_is_number_line)
+{
+    if(lineNumber[what_is_number_line] <= cursor_x)  // recheck cursor_x, (limit)
+    {
+        cursor_x = lineNumber[what_is_number_line];
+    }
+}
+
 void showText_and_movement(ifstream &file)
 {
     initscr();
@@ -56,20 +66,17 @@ void showText_and_movement(ifstream &file)
                 {
                     pad_index++; 
                     what_is_number_line++;
-                    if(lineNumber[what_is_number_line] < cursor_x)  // recheck cursor_x, (limit)
-                    {
-                        cursor_x = lineNumber[what_is_number_line];
-                    }
+
+                    // recheck cursor_x, (limit)
+                    switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
                 }
                 else
                 {
                     cursor_y++;
                     what_is_number_line++;
 
-                    if(lineNumber[what_is_number_line] < cursor_x)  // recheck cursor_x, (limit)
-                    {
-                        cursor_x = lineNumber[what_is_number_line];
-                    }
+                    // recheck cursor_x, (limit)
+                    switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
                 }
             }
         }
@@ -79,10 +86,7 @@ void showText_and_movement(ifstream &file)
             {
                 cursor_y--;
                 what_is_number_line--;
-                if(lineNumber[what_is_number_line] < cursor_x)  // switch line, recheck cursor_x
-                {
-                    cursor_x = lineNumber[what_is_number_line];
-                }
+                switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
             } 
             else 
             {
@@ -90,11 +94,7 @@ void showText_and_movement(ifstream &file)
                 {
                     pad_index--;
                     what_is_number_line--;
-                }
-                
-                if(lineNumber[what_is_number_line] < cursor_x)  // switch line, recheck cursor_x
-                {
-                    cursor_x = lineNumber[what_is_number_line];
+                    switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
                 }
             }
         }
@@ -118,12 +118,14 @@ void showText_and_movement(ifstream &file)
             {
                 pad_index-=10;
                 what_is_number_line-=10;
+                switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
             }
             else
             {
                 pad_index=0;
                 cursor_y=0;
                 what_is_number_line = 0;
+                switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
             }
 
         }
@@ -133,6 +135,7 @@ void showText_and_movement(ifstream &file)
             {
                 pad_index+=10;
                 what_is_number_line+=10;
+                switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
             }
         }
         //////////////////////////////
