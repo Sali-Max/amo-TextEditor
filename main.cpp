@@ -420,11 +420,12 @@ int main(int number, char* args[])
 
     ifstream file = ifstream(args[1]);
 
-    if(!file.is_open())
-    {
-        printf("amo: cannot open %s: No such file or directory", args[1]);
-        return 0;
-    }
+    // if(!file.is_open())  // readonly mod
+    // {
+    //     printf("amo: cannot open %s: No such file or directory", args[1]);
+    //     return 0;
+    // }
+
     showText_and_movement(file, args[1]); //send file and filename
     return 0;
 }
