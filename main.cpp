@@ -175,7 +175,7 @@ void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &
     }
 }
 
-void showText_and_movement(ifstream &file, const string &filename)
+void showText_and_movement(ifstream &file, const string &filename, int max_x, int max_y)
 {
     initscr();
     noecho();
@@ -187,6 +187,13 @@ void showText_and_movement(ifstream &file, const string &filename)
     vector<int> lineNumber;
     //
 
+    
+    
+    {   //loading
+        mvprintw(max_y,max_x/2,"Loading");
+        refresh();
+    }
+    
     WINDOW* pad = newpad(1000, 30);
     string buffer; //temp variable
     int linenumber = 0;
@@ -202,8 +209,15 @@ void showText_and_movement(ifstream &file, const string &filename)
         lines.push_back("");
         lineNumber.push_back(0);
     }
+
     file.close();   //safe close file
     
+    {   //remove Loading
+        move(max_y, max_x / 2);
+        clrtoeol();
+        refresh();
+    }
+
     
     refresh();  //refresh Screen
     
@@ -434,6 +448,11 @@ int main(int number, char* args[])
     //     return 0;
     // }
 
-    showText_and_movement(file, args[1]); //send file and filename
+    struct winsize scr;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
+    int max_y = scr.ws_row-1;
+    int max_x = scr.ws_col;
+
+    showText_and_movement(file, args[1], max_x, max_y); //send file and filename
     return 0;
 }
