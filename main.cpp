@@ -1,3 +1,23 @@
+/*
+ * amo TextEditor
+ * 
+ * Copyright (C) 2025 Sali
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 #include<iostream>
 #include<ncurses.h>
 #include<string>
@@ -5,10 +25,11 @@
 #include<unistd.h>
 #include<vector>
 #include<sys/ioctl.h>
+#include <algorithm>
 using namespace std;
 
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.80";
+#define APP_VERSION "0.84";
 
 
 bool save(const vector<string> &lines, const string &filename)
@@ -31,9 +52,12 @@ bool save(const vector<string> &lines, const string &filename)
 
 void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector<string> &lines)
 {
+    // int old_y, old_x;
+    // getyx(pad, old_y, old_x);
     wmove(pad, what_is_number_line, 0); //go to line
     wclrtoeol(pad); //delete line
     mvwprintw(pad, what_is_number_line, 0, "%s", lines[what_is_number_line].c_str()); // print new line
+    // wmove(pad, old_y, old_x);
 }
 
 void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index, const int &max_y)
@@ -46,17 +70,44 @@ void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, c
         lineNumber[what_is_number_line] = lines[what_is_number_line].length(); // Update line size
         cursor_x++;
     }
-    else if(key == KEY_BACKSPACE)    //Delete char
+    else if(key == KEY_BACKSPACE)
     {
-        if(cursor_x > 0)
+        if(cursor_x > 0)    //delete one char in line
         {
             lines[what_is_number_line].erase(cursor_x-1, 1);
             refresh_line(pad, what_is_number_line, lines);  // update screen
             lineNumber[what_is_number_line] = lines[what_is_number_line].length(); // Update line size
             cursor_x--;
         }
+        else    // delete line
+        {   
+            if(what_is_number_line != 0)    // not delete zero line
+            {
+                int old_lineNumber = lineNumber[what_is_number_line-1];
+                //////////////////////
+                lines[what_is_number_line-1].append(lines[what_is_number_line]);    //add text to up
+                lineNumber[what_is_number_line-1] = lines[what_is_number_line-1].length(); ///generate new up line, lineNumber
+                /////////////////////////////////////////// delete line 
+                lines.erase(lines.begin()+what_is_number_line);
+                lineNumber.erase(lineNumber.begin()+what_is_number_line);
+                //// update screen
+                for(int i=what_is_number_line-1; i<lines.size(); i++)   //refresh range
+                {
+                    refresh_line(pad, i, lines); 
+                }
+                {   //fix Endline refresh, (endline Not exist)
+                    wmove(pad, lines.size(), 0); // رفتن به ابتدای خط مورد نظر
+                    wclrtoeol(pad);             // پاک کردن از مکان فعلی تا انتهای خط
+                }
+                /////////////////////////// cursor
+                what_is_number_line--;
+                cursor_x = old_lineNumber;
+                if(0 < cursor_y) cursor_y--;
+                else pad_index--;
+            }
+        }
     }
-    else if(key == KEY_DC)  //delete key
+    else if(key == KEY_DC)
     {
         if(cursor_x+1 < lineNumber[what_is_number_line])
         {
@@ -68,14 +119,17 @@ void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, c
     else if(key == '\n')
     {
         string send_to_next_line = lines[what_is_number_line].substr(cursor_x);
-        if(send_to_next_line != "")
+        if(send_to_next_line != "") //if selected item
         {
-            //////////////////////////////////////////////////////////////////////////////////
-            lineNumber.insert(lineNumber.begin()+what_is_number_line+1, send_to_next_line.length()); //set linenumber new line
-            lines.insert(lines.begin()+what_is_number_line+1, send_to_next_line); //create new line and set value
-            lines[what_is_number_line].erase(cursor_x, lineNumber[what_is_number_line]); //delete value in old line
-            lineNumber.insert(lineNumber.begin()+what_is_number_line, lines[what_is_number_line].length()); //set linenumber after remove 
-            ////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////// create new line
+            string selected = lines[what_is_number_line].substr(cursor_x);  //get nextline text
+            lines.insert(lines.begin()+what_is_number_line+1, selected);
+            /////////////////////////////////// active line
+            lines[what_is_number_line] = lines[what_is_number_line].erase(cursor_x, lines[what_is_number_line].length()); //update active line
+            lineNumber[what_is_number_line] = lines[what_is_number_line].length(); //update active lineNumber
+            //////////////////////////////////
+            lineNumber.insert(lineNumber.begin()+what_is_number_line+1, selected.length()); //update new line, LineNumber
+            //////////////////////////////////////////////// screen run(pad_index, cursor_y), go to next line
             if(max_y > cursor_y) cursor_y++;
             else pad_index++;
             /////////////////////// 
@@ -87,18 +141,15 @@ void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, c
             {
                 refresh_line(pad, i, lines);
             }
-
-
         }
         else    //if not selected item to next line
         {
-            what_is_number_line++;  // first go to new line
-            ////////////////////////////////////////////////////////// create new line
-            lines.insert(lines.begin() + what_is_number_line, "");  //create empty line
-            lineNumber.insert(lineNumber.begin() + what_is_number_line, 0); // set lineNnumber 
-            /////////////////////////////////// go to next line
+            lines.insert(lines.begin()+what_is_number_line+1, "");    // create line
+            lineNumber.insert(lineNumber.begin()+what_is_number_line+1, 0);   //set lineNumber
+            /////////////////////////////////// screen run(pad_index, cursor_y), go to next line
             if(max_y > cursor_y) cursor_y++;
             else pad_index++;
+            what_is_number_line++;
             //////////////
             cursor_x = 0;
             /////////////////////////////////////////////////// refresh Display
@@ -118,6 +169,7 @@ void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &
         cursor_x = lineNumber[what_is_number_line];
     }
 }
+
 
 void showText_and_movement(ifstream &file, const string &filename)
 {
