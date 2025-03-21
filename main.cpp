@@ -5,8 +5,7 @@
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * the Free Software Foundation, version 3 of the License only.
  * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,7 +29,7 @@
 using namespace std;
 
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.86";
+#define APP_VERSION "0.87";
 
 
 bool save(const vector<string> &lines, const string &filename)
@@ -376,11 +375,35 @@ void showText_and_movement(ifstream &file, const string &filename)
 int main(int number, char* args[])
 {
 
-    if(strcmp(args[1], "-v") or strcmp(args[1], "--version"))   //show version
+    if(strcmp(args[1], "-v")== 0 or strcmp(args[1], "--version") == 0)   //show version
     {
         cout << "Version: " << APP_VERSION;
         printf("\n");
         return 0;
+    }
+    if(strcmp(args[1], "-h") == 0 or strcmp(args[1], "--help") == 0)
+    {
+        cout << R"( 
+        Amo - Lightweight Terminal Text Editor
+
+        Usage:  
+        amo [file]      Open a file for editing  
+        amo -h          Show this help message  
+        amo -v          Show version information  
+
+        Keyboard Shortcuts:  
+        Arrow Keys      Move cursor  
+        Enter          Insert new line  
+        Backspace      Delete character  
+        Ctrl+S         Save file  
+        Ctrl+Q         Quit editor  
+
+        Example:  
+        amo notes.txt   # Open 'notes.txt' for editing  
+
+        Fast. Simple. Efficient. 🚀
+         )" << endl; 
+        return 0;    
     }
 
     ifstream file = ifstream(args[1]);
