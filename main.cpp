@@ -60,7 +60,7 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
     // wmove(pad, old_y, old_x);
 }
 
-void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index, const int &max_y)
+void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index, const int &max_y)
 {
     if(key >= 32 && key <= 126) // Print Printable key
     {
@@ -160,6 +160,11 @@ void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, c
             }
         }
     }
+    else if(key == 17)
+    {
+        endwin();
+        exit(0);
+    }
 }
 
 void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &what_is_number_line)
@@ -197,6 +202,7 @@ void showText_and_movement(ifstream &file, const string &filename)
         lines.push_back("");
         lineNumber.push_back(0);
     }
+    file.close();   //safe close file
     
     
     refresh();  //refresh Screen
@@ -363,7 +369,7 @@ void showText_and_movement(ifstream &file, const string &filename)
         }
         else
         {
-            edit(lines, what_is_number_line, cursor_x, key, lineNumber, cursor_y, pad, pad_index, max_y);
+            keyboard_Handel(lines, what_is_number_line, cursor_x, key, lineNumber, cursor_y, pad, pad_index, max_y);
         }
         /////////////////////////////
         mvprintw(cursor_y, cursor_x, "");
