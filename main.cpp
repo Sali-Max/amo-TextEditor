@@ -345,6 +345,14 @@ void showText_and_movement(ifstream &file, const string &filename)
             }
             
         }
+        else if(key == KEY_HOME)
+        {
+            cursor_x = 0;
+        }
+        else if(key == KEY_END)
+        {
+            cursor_x = lineNumber[what_is_number_line];
+        }
         ////////////////////////////// edit file
         else if(key == 19) //save file
         {
