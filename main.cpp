@@ -21,7 +21,8 @@
 #include<iostream>
 #include<ncurses.h>
 #include<string>
-#include<fstream>
+#include<cstring> //strcmp
+#include<fstream> 
 #include<unistd.h>
 #include<vector>
 #include<sys/ioctl.h>
@@ -29,7 +30,7 @@
 using namespace std;
 
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.85";
+#define APP_VERSION "0.86";
 
 
 bool save(const vector<string> &lines, const string &filename)
@@ -374,6 +375,14 @@ void showText_and_movement(ifstream &file, const string &filename)
 
 int main(int number, char* args[])
 {
+
+    if(strcmp(args[1], "-v") or strcmp(args[1], "--version"))   //show version
+    {
+        cout << "Version: " << APP_VERSION;
+        printf("\n");
+        return 0;
+    }
+
     ifstream file = ifstream(args[1]);
 
     if(!file.is_open())
