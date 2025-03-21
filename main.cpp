@@ -29,7 +29,7 @@
 using namespace std;
 
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.84";
+#define APP_VERSION "0.85";
 
 
 bool save(const vector<string> &lines, const string &filename)
@@ -170,7 +170,6 @@ void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &
     }
 }
 
-
 void showText_and_movement(ifstream &file, const string &filename)
 {
     initscr();
@@ -186,7 +185,7 @@ void showText_and_movement(ifstream &file, const string &filename)
     WINDOW* pad = newpad(1000, 30);
     string buffer; //temp variable
     int linenumber = 0;
-    while(getline(file, buffer))
+    while(getline(file, buffer))    //get lines in file, save lines to lines, print line in pad
     {
         lines.push_back(buffer);
         lineNumber.push_back(buffer.length());
@@ -258,12 +257,32 @@ void showText_and_movement(ifstream &file, const string &filename)
             {
                 cursor_x--;
             }
+            else    // go to up line, (if exist)
+            {
+                if(what_is_number_line > 0)
+                {
+                    if(cursor_y > 0) cursor_y--;
+                    else pad_index--;
+                    cursor_x = lineNumber[what_is_number_line-1];
+                    what_is_number_line--;
+                }
+            }
         }
         else if(key == KEY_RIGHT)
         {
             if(lineNumber[what_is_number_line] > cursor_x)
             {      
                 cursor_x++;
+            }
+            else //if right unvilable >> line to next(if next is avilable)
+            {
+                if(what_is_number_line+1 < lines.size())    //if next line is avilable
+                {
+                    if(cursor_y < max_y) cursor_y++;
+                    else pad_index++;
+                    what_is_number_line++;
+                    cursor_x = 0;
+                }
             }
         }
         else if(key == KEY_PPAGE) // page Up    
@@ -343,7 +362,6 @@ void showText_and_movement(ifstream &file, const string &filename)
             edit(lines, what_is_number_line, cursor_x, key, lineNumber, cursor_y, pad, pad_index, max_y);
         }
         /////////////////////////////
-        
         mvprintw(cursor_y, cursor_x, "");
         prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
         key = getch();
