@@ -29,7 +29,7 @@
 using namespace std;
 
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.87";
+#define APP_VERSION "0.89";
 
 
 bool save(const vector<string> &lines, const string &filename)
@@ -189,10 +189,15 @@ void showText_and_movement(ifstream &file, const string &filename)
     {
         lines.push_back(buffer);
         lineNumber.push_back(buffer.length());
-
         mvwprintw(pad, linenumber, 0, "%s", buffer.c_str());
         linenumber++;
     }
+    if(lineNumber.size() == 0)  //empty file fix
+    {
+        lines.push_back("");
+        lineNumber.push_back(0);
+    }
+    
     
     refresh();  //refresh Screen
     
@@ -227,7 +232,6 @@ void showText_and_movement(ifstream &file, const string &filename)
                 {
                     cursor_y++;
                     what_is_number_line++;
-
                     // recheck cursor_x, (limit)
                     switch_line_cursor_x_fix(lineNumber, cursor_x, what_is_number_line);
                 }
@@ -277,7 +281,7 @@ void showText_and_movement(ifstream &file, const string &filename)
             else //if right unvilable >> line to next(if next is avilable)
             {
                 if(what_is_number_line+1 < lines.size())    //if next line is avilable
-                {
+                {   
                     if(cursor_y < max_y) cursor_y++;
                     else pad_index++;
                     what_is_number_line++;
@@ -381,7 +385,7 @@ int main(int number, char* args[])
         printf("\n");
         return 0;
     }
-    if(strcmp(args[1], "-h") == 0 or strcmp(args[1], "--help") == 0)
+    if(strcmp(args[1], "-h") == 0 or strcmp(args[1], "--help") == 0)    // help
     {
         cout << R"( 
         Amo - Lightweight Terminal Text Editor
