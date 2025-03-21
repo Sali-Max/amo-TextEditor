@@ -379,19 +379,20 @@ void showText_and_movement(ifstream &file, const string &filename)
     
     endwin();
 
-
 }
 
 int main(int number, char* args[])
 {
-
-    if(strcmp(args[1], "-v")== 0 or strcmp(args[1], "--version") == 0)   //show version
+   
+    if(number > 1) //no args coredump fix
     {
-        cout << "Version: " << APP_VERSION;
-        printf("\n");
-        return 0;
-    }
-    if(strcmp(args[1], "-h") == 0 or strcmp(args[1], "--help") == 0)    // help
+        if(strcmp(args[1], "-v")== 0 or strcmp(args[1], "--version") == 0)   //show version
+        {
+            cout << "Version: " << APP_VERSION;
+            printf("\n");
+            return 0;
+        }
+        if(strcmp(args[1], "-h") == 0 or strcmp(args[1], "--help") == 0)    // help
     {
         cout << R"( 
         Amo - Lightweight Terminal Text Editor
@@ -411,9 +412,10 @@ int main(int number, char* args[])
         Example:  
         amo notes.txt   # Open 'notes.txt' for editing  
 
-        Fast. Simple. Efficient. 🚀
+        Fast. Simple. Efficient.
          )" << endl; 
         return 0;    
+    }
     }
 
     ifstream file = ifstream(args[1]);
