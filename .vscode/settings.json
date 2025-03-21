@@ -3,6 +3,7 @@
         "optional": "cpp",
         "variant": "cpp",
         "fstream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "*.tcc": "cpp"
     }
 }

@@ -7,7 +7,8 @@
 #include<sys/ioctl.h>
 using namespace std;
 
-
+#define APP_NAME "amo Editor";
+#define APP_VERSION "0.80";
 
 
 bool save(const vector<string> &lines, const string &filename)
@@ -35,7 +36,7 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
     mvwprintw(pad, what_is_number_line, 0, "%s", lines[what_is_number_line].c_str()); // print new line
 }
 
-void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, WINDOW* pad)
+void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index, const int &max_y)
 {
     if(key >= 32 && key <= 126) // Print Printable key
     {
@@ -64,9 +65,51 @@ void edit(vector<string> &lines, long int &what_is_number_line, int &cursor_x, c
             lineNumber[what_is_number_line] = lines[what_is_number_line].length(); //update lineNumber
         }
     }
-    
-}
+    else if(key == '\n')
+    {
+        string send_to_next_line = lines[what_is_number_line].substr(cursor_x);
+        if(send_to_next_line != "")
+        {
+            //////////////////////////////////////////////////////////////////////////////////
+            lineNumber.insert(lineNumber.begin()+what_is_number_line+1, send_to_next_line.length()); //set linenumber new line
+            lines.insert(lines.begin()+what_is_number_line+1, send_to_next_line); //create new line and set value
+            lines[what_is_number_line].erase(cursor_x, lineNumber[what_is_number_line]); //delete value in old line
+            lineNumber.insert(lineNumber.begin()+what_is_number_line, lines[what_is_number_line].length()); //set linenumber after remove 
+            ////////////////////////////////////////////////
+            if(max_y > cursor_y) cursor_y++;
+            else pad_index++;
+            /////////////////////// 
+            what_is_number_line++;
+            cursor_x = 0;
+            //////////////////////////////////////////////// Refresh Display
+            refresh_line(pad, what_is_number_line-1, lines);
+            for(int i=what_is_number_line; i<lines.size(); i++)
+            {
+                refresh_line(pad, i, lines);
+            }
 
+
+        }
+        else    //if not selected item to next line
+        {
+            what_is_number_line++;  // first go to new line
+            ////////////////////////////////////////////////////////// create new line
+            lines.insert(lines.begin() + what_is_number_line, "");  //create empty line
+            lineNumber.insert(lineNumber.begin() + what_is_number_line, 0); // set lineNnumber 
+            /////////////////////////////////// go to next line
+            if(max_y > cursor_y) cursor_y++;
+            else pad_index++;
+            //////////////
+            cursor_x = 0;
+            /////////////////////////////////////////////////// refresh Display
+            refresh_line(pad, what_is_number_line-1, lines);
+            for(int i=what_is_number_line; i<lines.size(); i++)
+            {
+                refresh_line(pad, i, lines);
+            }
+        }
+    }
+}
 
 void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &what_is_number_line)
 {
@@ -245,12 +288,10 @@ void showText_and_movement(ifstream &file, const string &filename)
         }
         else
         {
-            edit(lines, what_is_number_line, cursor_x, key, lineNumber, pad);
+            edit(lines, what_is_number_line, cursor_x, key, lineNumber, cursor_y, pad, pad_index, max_y);
         }
         /////////////////////////////
         
-
-
         mvprintw(cursor_y, cursor_x, "");
         prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
         key = getch();
@@ -267,7 +308,7 @@ int main(int number, char* args[])
 
     if(!file.is_open())
     {
-        printf("aim: cannot open %s: No such file or directory", args[1]);
+        printf("amo: cannot open %s: No such file or directory", args[1]);
         return 0;
     }
     showText_and_movement(file, args[1]); //send file and filename
