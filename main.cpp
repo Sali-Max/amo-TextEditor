@@ -22,6 +22,7 @@
 #include<string>
 #include<cstring> //strcmp
 #include<fstream> 
+#include <sstream>
 #include<unistd.h>
 #include<vector>
 #include<sys/ioctl.h>
@@ -29,25 +30,35 @@
 using namespace std;
 
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.89";
+#define APP_VERSION "0.90";
 
 
-bool save(const vector<string> &lines, const string &filename)
-{
-    ofstream file(filename);
-    if(!file.is_open()) //check 
-    {
+bool save(const vector<string> &lines, const string &filename) {
+    ofstream file(filename, ios::binary);
+    if (!file.is_open()) {
         return false;
     }
 
-    int allLineNumber = lines.size();
-    for(size_t i=0; i < allLineNumber; i++)   //print all(-1) lines and go to next line
-    {
-        file << lines[i] << endl;
+    const size_t BUFFER_SIZE = 8192; // 
+    string buffer;
+    buffer.reserve(BUFFER_SIZE);
+
+    for (const auto &line : lines) {
+        buffer.append(line).append("\n");
+
+        // اگر بافر پر شد، بنویسیم و آن را پاک کنیم
+        if (buffer.size() >= BUFFER_SIZE) {
+            file.write(buffer.c_str(), buffer.size());
+            buffer.clear();
+        }
     }
 
-    file.close();
-    return true;
+    // نوشتن باقی‌مانده داده‌ها در فایل
+    if (!buffer.empty()) {
+        file.write(buffer.c_str(), buffer.size());
+    }
+
+    return file.good();
 }
 
 void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector<string> &lines)
@@ -136,8 +147,8 @@ void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &
             what_is_number_line++;
             cursor_x = 0;
             //////////////////////////////////////////////// Refresh Display
-            refresh_line(pad, what_is_number_line-1, lines);
-            for(int i=what_is_number_line; i<lines.size(); i++)
+            int lines_size = lines.size();
+            for(int i=what_is_number_line-1; i<lines_size; i++)
             {
                 refresh_line(pad, i, lines);
             }
@@ -153,8 +164,8 @@ void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &
             //////////////
             cursor_x = 0;
             /////////////////////////////////////////////////// refresh Display
-            refresh_line(pad, what_is_number_line-1, lines);
-            for(int i=what_is_number_line; i<lines.size(); i++)
+            int lines_size = lines.size();
+            for(int i=what_is_number_line-1; i<lines_size; i++)
             {
                 refresh_line(pad, i, lines);
             }
