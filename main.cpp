@@ -32,7 +32,7 @@ using namespace std;
 
 // global variable
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.92";
+#define APP_VERSION "0.93";
 string filename;
 int max_y;
 int max_x;
@@ -53,44 +53,77 @@ void printFile(string filename)
 }
  
 bool save(const vector<string> &lines, const string &filename) {
-     ofstream file(filename, ios::binary); // باز کردن فایل در حالت پیش‌فرض (متنی)
-     if (!file.is_open()) { // بررسی موفقیت باز شدن فایل
-         return false;
-     }
-     int BUFFER_SIZE = 40960; // 40KB
-     string buffer;
-     buffer.reserve(BUFFER_SIZE);
+    ofstream file(filename, ios::binary); // باز کردن فایل در حالت پیش‌فرض (متنی)
+    if (!file.is_open()) { // بررسی موفقیت باز شدن فایل
+        return false;
+    }
+    int BUFFER_SIZE = 40960; // 40KB
+    string buffer;
+    buffer.reserve(BUFFER_SIZE);
  
-     int allLineNumber = lines.size();
-     for (size_t i = 0; i < allLineNumber; i++) {
-         buffer.append(lines[i]).append("\n");   //create buffer
-         if(buffer.size() >= BUFFER_SIZE)    // write buffer
-         {
-             file << buffer;
-             buffer.clear();
-         }
-     }
+    int allLineNumber = lines.size();
+    for (size_t i = 0; i < allLineNumber; i++) {
+        buffer.append(lines[i]).append("\n");   //create buffer
+        if(buffer.size() >= BUFFER_SIZE)    // write buffer
+        {
+            file << buffer;
+            buffer.clear();
+        }
+    }
  
-     if(!buffer.empty())
-     {
-         file << buffer;
-     }
+    if(!buffer.empty())
+    {
+        file << buffer;
+    }
  
-     file.close();
-     return true;
+    file.close();
+    return true;
 }
  
 void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector<string> &lines)
 {
-     // int old_y, old_x;
-     // getyx(pad, old_y, old_x);
+    // int old_y, old_x;
+    // getyx(pad, old_y, old_x);
     wmove(pad, what_is_number_line, 0); //go to line
     wclrtoeol(pad); //delete line
     mvwprintw(pad, what_is_number_line, 0, "%s", lines[what_is_number_line].c_str()); // print new line
     // wmove(pad, old_y, old_x);
 }
- 
- void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index)
+
+int getKeyWith_showMessage(string message, bool get_key=true, int time=2)
+{
+    init_pair(1, COLOR_BLACK, COLOR_WHITE); // ایجاد ترکیب رنگ (متن سبز، پس‌زمینه مشکی)
+    attron(COLOR_PAIR(1));  //enable color
+    for (size_t i = 0; i < max_x; i++) //print Frame
+    {
+        mvprintw(max_y, i, " ");
+    }
+    mvprintw(max_y, (max_x/2.15), message.c_str());  // show message
+    refresh();  //refrsh std Screen
+    int key = 0;
+    if(get_key)
+    {
+        key = getch();  //get key
+    }
+
+    if(!get_key)    //wait for show message
+    {
+        sleep(1);
+    }
+    
+    attron(COLOR_PAIR(0));  //disable colors
+
+    //////////////////////////////
+    move(max_y, 0); // delete frame
+    clrtoeol();
+    ///////////////////////////////
+    refresh();
+
+    return key;
+}
+
+
+void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index)
  {
     if(key >= 32 && key <= 126) // Print Printable key
      {
@@ -192,24 +225,29 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
      }
     else if(key == 19) //save file
     {
-        if(save(lines, filename))
+        
+        if(getKeyWith_showMessage("Are you sure?(y/N)? ") == 'y') // key code is y
         {
-            endwin();
-            cout << "Success :)" << "\n";
-            sleep(1);
-            // initscr();   
+            if(save(lines, filename))
+            {
+                endwin();
+                cout << "Success :)" << "\n";
+                sleep(1);
+                // initscr();   
+            }
+            else
+            {
+                endwin();
+                cout << "ReadOnly File :(" << "\n";
+                sleep(2);
+                // initscr();
+            }
         }
-        else
-        {
-            endwin();
-            cout << "ReadOnly File :(" << "\n";
-            sleep(2);
-            // initscr();
-        }
+
     }
 }
  
- void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &what_is_number_line)
+void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &what_is_number_line)
  {
      if(lineNumber[what_is_number_line] <= cursor_x)  // recheck cursor_x, (limit)
      {
@@ -217,23 +255,24 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
      }
  }
  
- void showText_and_movement(ifstream &file, bool readonly)
- {
-     initscr();
-     noecho();
-     keypad(stdscr, true);
-     // curs_set(0);
+void showText_and_movement(ifstream &file, bool readonly)
+{
+    initscr();
+    noecho();
+    keypad(stdscr, true);
+    start_color();
+    // curs_set(0);
  
-     ///////////Variable
-     vector<string> lines;
-     vector<int> lineNumber;
-     // lines.reserve(100);
-     // lineNumber.reserve(100);
-     /////////////////
+    ///////////Variable
+    vector<string> lines;
+    vector<int> lineNumber;
+    // lines.reserve(100);
+    // lineNumber.reserve(100);
+    /////////////////
  
      
     {   //loading
-         mvprintw(max_y,max_x/2,"Loading");
+         mvprintw(max_y,max_x/2.15,"Loading");
          refresh();
     }
      
@@ -422,17 +461,17 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
                 keyboard_Handel(lines, what_is_number_line, cursor_x, key, lineNumber, cursor_y, pad, pad_index);
             }
         }
-         /////////////////////////////
-         mvprintw(cursor_y, cursor_x, "");
-         prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
-         key = getch();
+        /////////////////////////////
+        mvprintw(cursor_y, cursor_x, "");
+        prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
+        key = getch();
     }
      
     endwin();
  
- }
+}
  
- int main(int number, char* args[])
+int main(int number, char* args[])
  {
     // IGnore Singnal
     signal(SIGINT, SIG_IGN);    //disable cntrl+c
