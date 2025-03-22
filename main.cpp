@@ -17,36 +17,41 @@
  */
 
 
- #include<iostream>
- #include<ncurses.h>
- #include<string>
- #include<cstring> //strcmp
- #include<fstream> 
- #include<unistd.h>
- #include<vector>
- #include<sys/ioctl.h>
- using namespace std;
+#include<iostream>
+#include<ncurses.h>
+#include<string>
+#include<cstring> //strcmp
+#include<fstream> 
+#include<unistd.h>
+#include<vector>
+#include<sys/ioctl.h>
+using namespace std;
+
+
+
+// global variable
+#define APP_NAME "amo Editor";
+#define APP_VERSION "0.92";
+string filename;
+int max_y;
+int max_x;
+
+void printFile(string filename)
+{
+    ifstream file(filename);
+    if(!file.is_open())
+    {
+        printf("amo: NotFound or Access Deny\n");
+        exit(0);
+    }
  
- #define APP_NAME "amo Editor";
- #define APP_VERSION "0.92";
+    string buffer;
+    while(getline(file, buffer)) printf("%s \n", buffer.c_str());
  
+    file.close();
+}
  
- void printFile(string filename)
- {
-     ifstream file(filename);
-     if(!file.is_open())
-     {
-         printf("amo: NotFound or Access Deny\n");
-         exit(0);
-     }
- 
-     string buffer;
-     while(getline(file, buffer)) printf("%s \n", buffer.c_str());
- 
-     file.close();
- }
- 
- bool save(const vector<string> &lines, const string &filename) {
+bool save(const vector<string> &lines, const string &filename) {
      ofstream file(filename, ios::binary); // باز کردن فایل در حالت پیش‌فرض (متنی)
      if (!file.is_open()) { // بررسی موفقیت باز شدن فایل
          return false;
@@ -72,21 +77,21 @@
  
      file.close();
      return true;
- }
+}
  
- void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector<string> &lines)
- {
+void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector<string> &lines)
+{
      // int old_y, old_x;
      // getyx(pad, old_y, old_x);
-     wmove(pad, what_is_number_line, 0); //go to line
-     wclrtoeol(pad); //delete line
-     mvwprintw(pad, what_is_number_line, 0, "%s", lines[what_is_number_line].c_str()); // print new line
-     // wmove(pad, old_y, old_x);
- }
+    wmove(pad, what_is_number_line, 0); //go to line
+    wclrtoeol(pad); //delete line
+    mvwprintw(pad, what_is_number_line, 0, "%s", lines[what_is_number_line].c_str()); // print new line
+    // wmove(pad, old_y, old_x);
+}
  
- void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index, const int &max_y)
+ void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index)
  {
-     if(key >= 32 && key <= 126) // Print Printable key
+    if(key >= 32 && key <= 126) // Print Printable key
      {
          lines[what_is_number_line].insert(cursor_x, 1, key);    // insert key to line
          refresh_line(pad, what_is_number_line, lines);  // update screen
@@ -94,7 +99,7 @@
          lineNumber[what_is_number_line] = lines[what_is_number_line].length(); // Update line size
          cursor_x++;
      }
-     else if(key == KEY_BACKSPACE)
+    else if(key == KEY_BACKSPACE)
      {
          if(cursor_x > 0)    //delete one char in line
          {
@@ -131,7 +136,7 @@
              }
          }
      }
-     else if(key == KEY_DC)
+    else if(key == KEY_DC)
      {
          if(cursor_x+1 < lineNumber[what_is_number_line])
          {
@@ -140,7 +145,7 @@
              lineNumber[what_is_number_line] = lines[what_is_number_line].length(); //update lineNumber
          }
      }
-     else if(key == '\n')
+    else if(key == '\n')
      {
          string send_to_next_line = lines[what_is_number_line].substr(cursor_x);
          if(send_to_next_line != "") //if selected item
@@ -184,12 +189,24 @@
              }
          }
      }
-     else if(key == 17)
-     {
-         endwin();
-         exit(0);
-     }
- }
+    else if(key == 19) //save file
+    {
+        if(save(lines, filename))
+        {
+            endwin();
+            cout << "Success :)" << "\n";
+            sleep(1);
+            // initscr();   
+        }
+        else
+        {
+            endwin();
+            cout << "ReadOnly File :(" << "\n";
+            sleep(2);
+            // initscr();
+        }
+    }
+}
  
  void switch_line_cursor_x_fix(vector<int> &lineNumber, int &cursor_x, long int &what_is_number_line)
  {
@@ -199,7 +216,7 @@
      }
  }
  
- void showText_and_movement(ifstream &file, const string &filename, int max_x, int max_y, bool readonly)
+ void showText_and_movement(ifstream &file, bool readonly)
  {
      initscr();
      noecho();
@@ -214,10 +231,10 @@
      /////////////////
  
      
-     {   //loading
+    {   //loading
          mvprintw(max_y,max_x/2,"Loading");
          refresh();
-     }
+    }
      
      WINDOW* pad = newpad(1000, 80);
      string buffer; //temp variable
@@ -245,22 +262,22 @@
  
      refresh();  //refresh Screen
      
-     int key = 0;
-     int pad_index = 0;
-     int cursor_y = 0;
-     int cursor_x = 0;
-     long int what_is_number_line = 0;
-     while (true)
+    int key = 0;
+    int pad_index = 0;
+    int cursor_y = 0;
+    int cursor_x = 0;
+    long int what_is_number_line = 0;
+    while (true)
      {   
-         /////////////////////// Update Scr size (for Dynamic Screen Size)
-         struct winsize scr;
-         ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
-         int max_y = scr.ws_row-1;
-         int max_x = scr.ws_col;
-         ///////////////////////
+        /////////////////////// Update Scr size (for Dynamic Screen Size)
+        struct winsize scr;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
+        max_y = scr.ws_row-1;
+        max_x = scr.ws_col;
+        ///////////////////////
  
-         /////////////////////////////   Input Handler
-         if(key == KEY_DOWN)
+        /////////////////////////////   Input Handler
+        if(key == KEY_DOWN)
          {
              if(what_is_number_line < lines.size()-1)  //set maximum down
              {
@@ -281,7 +298,7 @@
                  }
              }
          }
-         else if(key == KEY_UP)
+        else if(key == KEY_UP)
          {
              if(cursor_y > 0)
              {
@@ -299,7 +316,7 @@
                  }
              }
          }
-         else if(key == KEY_LEFT)
+        else if(key == KEY_LEFT)
          {
              if(cursor_x > 0)
              {
@@ -316,7 +333,7 @@
                  }
              }
          }
-         else if(key == KEY_RIGHT)
+        else if(key == KEY_RIGHT)
          {
              if(lineNumber[what_is_number_line] > cursor_x)
              {      
@@ -333,7 +350,7 @@
                  }
              }
          }
-         else if(key == KEY_PPAGE) // page Up    
+        else if(key == KEY_PPAGE) // page Up    
          {
              if(pad_index > 10)
              {
@@ -350,7 +367,7 @@
              }
  
          }
-         else if(key == KEY_NPAGE)   //page down
+        else if(key == KEY_NPAGE)   //page down
          {
              if(what_is_number_line+(max_y+cursor_y) < lines.size())   //if thisLine+10 not biger of all lines
              {
@@ -383,46 +400,34 @@
              }
              
          }
-         else if(key == KEY_HOME)
+        else if(key == KEY_HOME)
          {
              cursor_x = 0;
          }
-         else if(key == KEY_END)
+        else if(key == KEY_END)
          {
              cursor_x = lineNumber[what_is_number_line];
          }
-         ////////////////////////////// edit file
-         else if(key == 19) //save file
-         {
-             if(!readonly && save(lines, filename))
-             {
-                 endwin();
-                 cout << "Success :)" << "\n";
-                 sleep(1);
-                 // initscr();   
-             }
-             else
-             {
-                 endwin();
-                 cout << "ReadOnly File :(" << "\n";
-                 sleep(2);
-                 // initscr();
-             }
-         }
-         else
-         {
-             if(!readonly)   //readonly mode
-             {
-                 keyboard_Handel(lines, what_is_number_line, cursor_x, key, lineNumber, cursor_y, pad, pad_index, max_y);
-             }
-         }
+        ////////////////////////////// edit file
+        else if(key == 17)  //exit
+        {
+            endwin();
+            exit(0);
+        }
+        else
+        {
+            if(!readonly)   //readonly mode
+            {
+                keyboard_Handel(lines, what_is_number_line, cursor_x, key, lineNumber, cursor_y, pad, pad_index);
+            }
+        }
          /////////////////////////////
          mvprintw(cursor_y, cursor_x, "");
          prefresh(pad, pad_index, 0, 0, 0, max_y, 50);   //refresh pad
          key = getch();
-     }    
+    }
      
-     endwin();
+    endwin();
  
  }
  
@@ -486,14 +491,15 @@
      }
      ///////////////////////////////////
      
+    filename = args[1]; //set filename to global
  
-     //////////////////////////////// get screen size
-     struct winsize scr;
-     ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
-     int max_y = scr.ws_row-1;
-     int max_x = scr.ws_col;
-     /////////////////////////////////////////
-     showText_and_movement(file, args[1], max_x, max_y, readonly); //send file and filename
-     return 0;
+    //////////////////////////////// get screen size
+    struct winsize scr;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &scr);  // Get Terminal Detail
+    max_y = scr.ws_row-1;
+    max_x = scr.ws_col;
+    /////////////////////////////////////////
+    showText_and_movement(file, readonly); //send file and filename
+    return 0;
  }
  
