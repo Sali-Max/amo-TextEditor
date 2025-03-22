@@ -25,6 +25,7 @@
 #include<unistd.h>
 #include<vector>
 #include<sys/ioctl.h>
+#include<csignal>   //disable Cntrl+C
 using namespace std;
 
 
@@ -236,31 +237,31 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
          refresh();
     }
      
-     WINDOW* pad = newpad(1000, 80);
-     string buffer; //temp variable
-     int linenumber = 0;
-     while(getline(file, buffer))    //get lines in file, save lines to lines, print line in pad
-     {
-         lines.push_back(buffer);
-         lineNumber.push_back(buffer.length());
-         mvwprintw(pad, linenumber, 0, "%s", buffer.c_str());
-         linenumber++;
-     }
-     if(lineNumber.size() == 0)  //empty file fix
-     {
-         lines.push_back("");
-         lineNumber.push_back(0);
-     }
+    WINDOW* pad = newpad(1000, 80);
+    string buffer; //temp variable
+    int linenumber = 0;
+    while(getline(file, buffer))    //get lines in file, save lines to lines, print line in pad
+    {
+        lines.push_back(buffer);
+        lineNumber.push_back(buffer.length());
+        mvwprintw(pad, linenumber, 0, "%s", buffer.c_str());
+        linenumber++;
+    }
+    if(lineNumber.size() == 0)  //empty file fix
+    {
+        lines.push_back("");
+        lineNumber.push_back(0);
+    }
  
-     file.close();   //safe close file
+    file.close();   //safe close file
      
-     {   //remove Loading
+    {   //remove Loading
          move(max_y, max_x / 2);
          clrtoeol();
          refresh();
      }
  
-     refresh();  //refresh Screen
+    refresh();  //refresh Screen
      
     int key = 0;
     int pad_index = 0;
@@ -433,9 +434,12 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
  
  int main(int number, char* args[])
  {
-     bool readonly = false;
-     //////////////////////////////// agrs handler
-     if(number > 1) //no args coredump fix
+    // IGnore Singnal
+    signal(SIGINT, SIG_IGN);    //disable cntrl+c
+
+    bool readonly = false;
+    //////////////////////////////// agrs handler
+    if(number > 1) //no args coredump fix
      {
          if(strcmp(args[1], "-v")== 0 or strcmp(args[1], "--version") == 0)   //show version
          {
@@ -480,16 +484,16 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
              return 0;    
          }
      }
-     ////////////////////////////////////
+    ////////////////////////////////////
  
-     ///////////////////////////////////
-     ifstream file = ifstream(args[1]);
-     if(!file.is_open())  // Check Exist
+    ///////////////////////////////////
+    ifstream file = ifstream(args[1]);
+    if(!file.is_open())  // Check Exist
      {
          printf("amo: cannot open: NotFound or Access Deny\n");
          return 0;
      }
-     ///////////////////////////////////
+    ///////////////////////////////////
      
     filename = args[1]; //set filename to global
  
