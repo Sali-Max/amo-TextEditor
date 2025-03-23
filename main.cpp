@@ -32,7 +32,7 @@ using namespace std;
 
 // global variable
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.94";
+#define APP_VERSION "0.95";
 string filename;
 int max_y;
 int max_x;
@@ -52,7 +52,7 @@ void printFile(string filename)
     file.close();
 }
  
-bool save(const vector<string> &lines, const string &filename) {
+bool save(vector<string> &lines, const string &filename) {
     ofstream file(filename, ios::binary); // باز کردن فایل در حالت پیش‌فرض (متنی)
     if (!file.is_open()) { // بررسی موفقیت باز شدن فایل
         return false;
@@ -60,8 +60,12 @@ bool save(const vector<string> &lines, const string &filename) {
     int BUFFER_SIZE = 40960; // 40KB
     string buffer;
     buffer.reserve(BUFFER_SIZE);
- 
+
     int allLineNumber = lines.size();
+    
+    if(allLineNumber == 1)  //fix one line extra(if file empty)
+        if(lines[0].empty()) lines.pop_back();
+    
     for (size_t i = 0; i < allLineNumber; i++) {
         buffer.append(lines[i]).append("\n");   //create buffer
         if(buffer.size() >= BUFFER_SIZE)    // write buffer
@@ -477,36 +481,36 @@ void showText_and_movement(ifstream &file, bool readonly)
 }
  
 int main(int number, char* args[])
- {
+{
     // IGnore Singnal
     signal(SIGINT, SIG_IGN);    //disable cntrl+c
 
     bool readonly = false;
     //////////////////////////////// agrs handler
     if(number > 1) //no args coredump fix
-     {
-         if(strcmp(args[1], "-v")== 0 or strcmp(args[1], "--version") == 0)   //show version
+    {
+        if(strcmp(args[1], "-v")== 0 or strcmp(args[1], "--version") == 0)   //show version
+        {
+            cout << "Version: " << APP_VERSION;
+            printf("\n");
+            return 0;
+        }
+        if(number>2)
          {
-             cout << "Version: " << APP_VERSION;
-             printf("\n");
-             return 0;
-         }
-         if(number>2)
-         {
-             if(strcmp(args[2], "-r") == 0 or strcmp(args[2], "--readonly") == 0)
-             {
-                 readonly=true;
-             }
-             else if(strcmp(args[2], "-p") == 0 or strcmp(args[2], "--print") == 0)
-             {
-                 printFile(args[1]);
-                 exit(0);
-             }
+            if(strcmp(args[2], "-r") == 0 or strcmp(args[2], "--readonly") == 0)
+            {
+                readonly=true;
+            }
+            else if(strcmp(args[2], "-p") == 0 or strcmp(args[2], "--print") == 0)
+            {
+                printFile(args[1]);
+                exit(0);
+            }
          }
  
          if(strcmp(args[1], "-h") == 0 or strcmp(args[1], "--help") == 0)    // help
          {
-             cout << R"( 
+            cout << R"( 
             Amo - Lightweight Terminal Text Editor
  
             Usage:  
@@ -521,11 +525,11 @@ int main(int number, char* args[])
             Ctrl+Q         Quit editor
             Ctrl+W         Save and Exit
  
-             Example:  
-             amo notes.txt   # Open 'notes.txt' for editing  
+            Example:  
+            amo notes.txt   # Open 'notes.txt' for editing  
  
-             Fast. Simple. Efficient.
-             )" << endl; 
+            Fast. Simple. Efficient.
+            )" << endl; 
              return 0;    
          }
      }
