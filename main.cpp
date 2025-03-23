@@ -32,7 +32,7 @@ using namespace std;
 
 // global variable
 #define APP_NAME "amo Editor";
-#define APP_VERSION "0.93";
+#define APP_VERSION "0.94";
 string filename;
 int max_y;
 int max_x;
@@ -90,9 +90,10 @@ void refresh_line(WINDOW* pad, const long int &what_is_number_line, const vector
     // wmove(pad, old_y, old_x);
 }
 
-int getKeyWith_showMessage(string message, bool get_key=true, int time=2)
+int getKeyWith_showMessage(string message, bool get_key=true, int time=2, bool error=false)
 {
-    init_pair(1, COLOR_BLACK, COLOR_WHITE); // ایجاد ترکیب رنگ (متن سبز، پس‌زمینه مشکی)
+    if(error) init_pair(1, COLOR_BLACK, COLOR_RED); else init_pair(1, COLOR_BLACK, COLOR_WHITE);
+
     attron(COLOR_PAIR(1));  //enable color
     for (size_t i = 0; i < max_x; i++) //print Frame
     {
@@ -122,9 +123,8 @@ int getKeyWith_showMessage(string message, bool get_key=true, int time=2)
     return key;
 }
 
-
 void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &cursor_x, const int key, vector<int> &lineNumber, int &cursor_y, WINDOW* pad, int &pad_index)
- {
+{
     if(key >= 32 && key <= 126) // Print Printable key
      {
          lines[what_is_number_line].insert(cursor_x, 1, key);    // insert key to line
@@ -230,17 +230,11 @@ void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &
         {
             if(save(lines, filename))
             {
-                endwin();
-                cout << "Success :)" << "\n";
-                sleep(1);
-                // initscr();   
+                getKeyWith_showMessage("Saved :)", false, 1);
             }
             else
             {
-                endwin();
-                cout << "ReadOnly File :(" << "\n";
-                sleep(2);
-                // initscr();
+                getKeyWith_showMessage("Readonly :(", false, 1, true);
             }
         }
 
