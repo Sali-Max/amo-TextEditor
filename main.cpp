@@ -555,4 +555,3 @@ int main(int number, char* args[])
     showText_and_movement(file, readonly); //send file and filename
     return 0;
  }
- 
