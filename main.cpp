@@ -223,7 +223,7 @@ void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &
              }
          }
      }
-    else if(key == 19) //save file
+    else if(key == 19) //save file(cntrl+s)
     {
         
         if(getKeyWith_showMessage("Are you sure?(y/N)? ") == 'y') // key code is y
@@ -238,6 +238,17 @@ void keyboard_Handel(vector<string> &lines, long int &what_is_number_line, int &
             }
         }
 
+    }
+    else if(key == 23)  //save and exit(cntrl+w)
+    {
+        if(!save(lines, filename))
+        {
+            getKeyWith_showMessage("Readonly :(", false, 1, true);
+        }
+        else{
+            endwin();
+            exit(0);
+        }
     }
 }
  
@@ -496,18 +507,19 @@ int main(int number, char* args[])
          if(strcmp(args[1], "-h") == 0 or strcmp(args[1], "--help") == 0)    // help
          {
              cout << R"( 
-             Amo - Lightweight Terminal Text Editor
+            Amo - Lightweight Terminal Text Editor
  
-             Usage:  
-             amo [FILE]      Open a file for editing  
-             -h              Show this help message  
-             -v              Show version information
-             -p              Print file to Terminal
-             [FILE] -r       Readonly Mode
-             Keyboard Shortcuts:  
-             Arrow Keys     Move cursor    
-             Ctrl+S         Save file  
-             Ctrl+Q         Quit editor  
+            Usage:  
+            amo [FILE]      Open a file for editing  
+            -h              Show this help message  
+            -v              Show version information
+            -p              Print file to Terminal
+            [FILE] -r       Readonly Mode
+            Keyboard Shortcuts:  
+            Arrow Keys     Move cursor
+            Ctrl+S         Save file
+            Ctrl+Q         Quit editor
+            Ctrl+W         Save and Exit
  
              Example:  
              amo notes.txt   # Open 'notes.txt' for editing  
