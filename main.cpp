@@ -16,7 +16,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 #include<iostream>
 #include<ncurses.h>
 #include<string>
@@ -27,7 +26,6 @@
 #include<sys/ioctl.h>
 #include<csignal>   //disable Cntrl+C
 using namespace std;
-
 
 
 // global variable
